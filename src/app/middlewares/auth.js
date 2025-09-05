@@ -12,7 +12,7 @@ const authToken = request.headers.authorization;
   const token = authToken.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, authConfig.secret); 
+    const decoded = jwt.verify(token, authConfig.secret);  
 
     request.userId = decoded.id;
     request.userName = decoded.name;
