@@ -1,14 +1,18 @@
 import Stripe from 'stripe';
 import * as Yup from 'yup';
-import 'dotenv/config'
-const stripe = new Stripe(process.env.STRIPE_KEI_SECRET);
+import 'dotenv/config';
+
+const stripe = new Stripe(
+  (process.env.STRIPE_SECRET_KEY =
+    
+);
 
 const calculateOrderAmount = (items) => {
   const total = items.reduce((acc, current) => {
     return current.price * current.quantity + acc;
   }, 0);
 
-  return total * 100;
+  return total * 100; // O valor deve estar em centavos
 };
 
 class CreatePaymentIntentController {
@@ -26,28 +30,43 @@ class CreatePaymentIntentController {
     });
 
     try {
-      schema.validateSync(request.body, { abortEarly: false });
+      await schema.validate(request.body, { abortEarly: false }); // Validação assíncrona
     } catch (err) {
+      console.log('🔐 PaymentIntent:', paymentIntent);
+      console.log('🔐 client_secret enviado:', paymentIntent.client_secret);
       return response.status(400).json({ error: err.errors });
     }
-     
+
     const { products } = request.body;
 
     const amount = calculateOrderAmount(products);
 
-    const paymantIntent = await Stripe.paymantIntent.creat({
+    try {
+      const paymentIntent = await stripe.paymentIntents.create({
+        // Correção aqui
         amount,
-        currency: "brl",
-
+        currency: 'brl',
         automatic_payment_methods: {
-            enabled: true,
+          enabled: true,
         },
-    });
+      });
 
-    response.json({
-        clientSecret: paymantIntent.client_secret,
-        dpmCheckerLink:`https://dashboard.stripe.com/settings/payment_methods/review?transaction_id=${paymantIntent.id} `,
-    });
+      console.log('🔐 PaymentIntent:', paymentIntent);
+      console.log('🔐 client_secret enviado:', paymentIntent.client_secret);
+
+      return response.json({
+        clientSecret: paymentIntent.client_secret,
+        dpmCheckerLink: `https://dashboard.stripe.com/settings/payment_methods/review?transaction_id=${paymentIntent.id}`,
+      });
+    } catch (error) {
+      console.log('Erro ao criar o Payment Intent');
+      return response
+        .status(500)
+        .json({
+          error: 'Erro ao criar o Payment Intent',
+          details: error.message,
+        });
+    }
   }
 }
 
