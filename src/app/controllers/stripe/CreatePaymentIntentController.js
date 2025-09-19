@@ -3,16 +3,18 @@ import * as Yup from 'yup';
 import 'dotenv/config';
 
 const stripe = new Stripe(
+<<<<<<< HEAD
   (process.env.STRIPE_SECRET_KEY =
     
-);
+=======
+  
 
 const calculateOrderAmount = (items) => {
   const total = items.reduce((acc, current) => {
     return current.price * current.quantity + acc;
   }, 0);
 
-  return total * 100; // O valor deve estar em centavos
+  return total; 
 };
 
 class CreatePaymentIntentController {
@@ -32,8 +34,7 @@ class CreatePaymentIntentController {
     try {
       await schema.validate(request.body, { abortEarly: false }); // Validação assíncrona
     } catch (err) {
-      console.log('🔐 PaymentIntent:', paymentIntent);
-      console.log('🔐 client_secret enviado:', paymentIntent.client_secret);
+      
       return response.status(400).json({ error: err.errors });
     }
 
@@ -43,7 +44,7 @@ class CreatePaymentIntentController {
 
     try {
       const paymentIntent = await stripe.paymentIntents.create({
-        // Correção aqui
+       
         amount,
         currency: 'brl',
         automatic_payment_methods: {
