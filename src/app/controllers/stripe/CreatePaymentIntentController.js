@@ -2,11 +2,11 @@ import Stripe from 'stripe';
 import * as Yup from 'yup';
 import 'dotenv/config';
 
-const stripe = new Stripe(
-<<<<<<< HEAD
-  (process.env.STRIPE_SECRET_KEY =
+const stripe = new Stripe( 
+  process.env.STRIPE_SECRET_KEY='sk_test_51RUUG3LWEeAwvbWdwnCOcyOz0Ue0yVq7Aj5TArjKGntMSJduLShMUqWIycINwrbs7Hh2TUkrHJrQUyhaNXBqavM3008a7T9zJ3')
+  
     
-=======
+
   
 
 const calculateOrderAmount = (items) => {
