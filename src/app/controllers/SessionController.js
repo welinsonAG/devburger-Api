@@ -1,7 +1,7 @@
 import * as Yup from 'yup';
-import User from '../models/User';
+import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
-import authConfig from '../../config/auth'
+import authConfig from '../../config/auth.js';
 
 class SessionController {
   async store(request, response) {
@@ -39,7 +39,7 @@ class SessionController {
     if (!isSamePassword) {
       return  emailOrPasswordIncorrect ()
     }
-
+console.log('SECRET SIGN:', authConfig.secret);
     return response.status(201).json({
       id: user.id,
       name: user.name,
@@ -51,5 +51,6 @@ class SessionController {
     });
   }
 }
+
 
 export default new SessionController();

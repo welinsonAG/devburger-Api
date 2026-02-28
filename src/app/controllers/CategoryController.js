@@ -1,6 +1,6 @@
 import * as Yup from 'yup';
-import Category from '../models/Category';
-import User from '../models/User';
+import Category from '../models/Category.js';
+import User from '../models/User.js';
 
 class CategoryController {
   async index(req, res) {
@@ -8,6 +8,9 @@ class CategoryController {
       const categories = await Category.findAll({
         order: [['id', 'ASC']],
       });
+
+    
+
       return res.status(200).json(categories);
     } catch (error) {
       return res.status(500).json({ error: 'Failed to load categories' });
@@ -31,7 +34,7 @@ class CategoryController {
       return response.status(401).json();
     }
 
-    const { filename: path } = request.file;
+    const path = request.file?.filename || null;
     const { name } = request.body;
 
     const categoryExists = await Category.findOne({

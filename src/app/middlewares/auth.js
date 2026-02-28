@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import authConfig from '../../config/auth';
+import authConfig from '../../config/auth.js';
 
 function authMiddleware(request, response, next) {
 
@@ -10,7 +10,7 @@ const authToken = request.headers.authorization;
   }
 
   const token = authToken.split(' ')[1];
-
+console.log('SECRET VERIFY:', authConfig.secret);
   try {
     const decoded = jwt.verify(token, authConfig.secret);  
 
@@ -24,5 +24,6 @@ return next();
 
   
 }
+
 
 export default authMiddleware;

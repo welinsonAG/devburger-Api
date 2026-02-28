@@ -1,9 +1,10 @@
 import * as Yup from 'yup';
-import Product from '../models/Product';
-import Category from '../models/Category'
-import User from '../models/User';
+import Product from '../models/Product.js';
+import Category from '../models/Category.js'
+import User from '../models/User.js';
 
 class ProductController {
+
   async store(request, response) {
     const schema = Yup.object({
       name: Yup.string().required(),
@@ -25,15 +26,16 @@ class ProductController {
     }
 
 
-    const { filename: path } = request.file;
+    const path = request.file?.filename || null;
+
     const { name, price, category_id, offer} = request.body;
 
     const product = await Product.create({
       name,
       price,
       category_id,
-      path,
       offer,
+       path,
     });
 
     return response.status(201).json(product);
@@ -82,14 +84,47 @@ class ProductController {
       offer,
     },
   {
-where: {
+  where: {
   id,
 }
   },
 );
 
     return response.status(201).json(product);
+
+}   
+async updateImage(request, response) {
+  const { admin: isAdmin } = await User.findByPk(request.userId);
+
+  if (!isAdmin) {
+    return response.status(401).json();
   }
+
+  const { id } = request.params;
+
+  const product = await Product.findByPk(id);
+
+  if (!product) {
+    return response.status(400).json({
+      error: 'Make sure your product ID is correct',
+    });
+  }
+
+  if (!request.file) {
+    return response.status(400).json({
+      error: 'Image is required',
+    });
+  }
+
+  await Product.update(
+    { path: request.file.filename },
+    { where: { id } }
+  );
+
+  return response.json({
+    message: 'Image updated successfully',
+  });
+}
 
 
   
@@ -106,16 +141,20 @@ where: {
   const productsWithUrl = products.map(product => {
     const productJson = product.toJSON();
 
+    if (productJson.path) {
+      productJson.url = `http://localhost:3001/product-file/${productJson.path}`;
+    }
+    
     if (productJson.category) {
       productJson.category.url = `http://localhost:3001/category-file/${productJson.category.path}`;
     }
 
     return {
       ...productJson,
-      currencyValue: (productJson.price / 100).toFixed(2)  // opcional
+      currencyValue: (productJson.price / 100).toFixed(2)  
     };
   });
-    return response.status(201).json(products);
+    return response.status(200).json(productsWithUrl);
   }
 }
 
