@@ -1,25 +1,7 @@
-// localmente
-//import app from './app.js';
 
-//const PORT =3001;
+import app from './app.js';
 
-//app.listen(PORT, '0.0.0.0',() => console.log(`Server is running at port ${PORT}...` ));//
+const PORT = process.env.PORT || 3001;
 
-
-//vercel dev
-
-import express from 'express';
-import dotenv, { config } from 'dotenv';
-import cors from 'cors';
-
-dotenv.config();
-
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-import routes from './routes.js';
-app.use(routes);
-
-export default app;
+app.listen(PORT, '0.0.0.0',() =>
+     console.log(`Server is running at port ${PORT}...` ));

@@ -13,7 +13,10 @@ const __dirname = dirname(__filename);
 class App {
   constructor() {
     this.app = express();
-    this.app.use  (cors());
+    this.app.use  (cors({
+      origin: process.env.APP_URL,
+      credentials: true,
+    }));
     this.middlewares();
     this.routes();
   }
