@@ -1,8 +1,9 @@
 import * as Yup from 'yup';
 import Product from '../models/Product.js';
-import Category from '../models/Category.js'
+import Category from '../models/Category.js';
 import User from '../models/User.js';
-
+import { uploadMultipleImages } from '../../utils/uploadToSupabase.js';
+import { deleteMultipleImages } from '../../utils/deleteFromSupabase.js';
 class ProductController {
 
   async store(request, response) {
@@ -19,88 +20,36 @@ class ProductController {
       return response.status(400).json({ error: err.errors });
     }
 
-     const { admin: isAdmin } = await User.findByPk(request.userId);
+    const user = await User.findByPk(request.userId);
 
-    if (!isAdmin) {
-      return response.status(401).json();
+    if (!user || !user.admin) {
+      return response.status(401).json({ error: 'Unauthorized' });
     }
 
-
-    const path = request.file?.filename || null;
-
-    const { name, price, category_id, offer} = request.body;
-
-    const product = await Product.create({
-      name,
-      price,
-      category_id,
-      offer,
-       path,
-    });
-
-    return response.status(201).json(product);
-  }
-
-   async update(request, response) {
-    const schema = Yup.object({
-      name: Yup.string(),
-      price: Yup.number(),
-      category_id: Yup.number(),
-      offer: Yup.boolean(),
-    });
-
-    try {
-      schema.validateSync(request.body, { abortEarly: false });
-    } catch (err) {
-      return response.status(400).json({ error: err.errors });
-    }
-
-     const { admin: isAdmin } = await User.findByPk(request.userId);
-
-    if (!isAdmin) {
-      return response.status(401).json();
-    }
-
-    const {id} = request.params;
-
-    const product = await Product.findByPk(id);
-
-    if (! product){
-      return response.status(400).json({ error: 'Make sure your product ID is correct'})
-    }
-
-    let path;
-    if (request.file){
-      path = request.file.filename
-    }
-
-    const { name, price, category_id, offer} = request.body;
-
-   await Product.update({
-      name,
-      price,
-      category_id,
-      path,
-      offer,
-    },
-  {
-  where: {
-  id,
+   
+    if (request.files && request.files.length > 5) {
+  return response.status(400).json({
+    error: 'Maximum of 5 images per product',
+  });
 }
-  },
-);
+
+ let imageUrls = [];
+
+ if (request.files && request.files.length > 0) {
+  imageUrls = await uploadMultipleImages(request.files);
+}
+    const product = await Product.create({
+      ...request.body,
+      images: imageUrls,
+    });
 
     return response.status(201).json(product);
-
-}   
-async updateImage(request, response) {
-  const { admin: isAdmin } = await User.findByPk(request.userId);
-
-  if (!isAdmin) {
-    return response.status(401).json();
   }
 
+
+async deleteImage(request, response) {
   const { id } = request.params;
+  const { imageUrl } = request.body;
 
   const product = await Product.findByPk(id);
 
@@ -110,52 +59,101 @@ async updateImage(request, response) {
     });
   }
 
-  if (!request.file) {
+  const user = await User.findByPk(request.userId);
+
+  if (!user || !user.admin) {
+    return response.status(401).json({ error: 'Unauthorized' });
+  }
+
+  let imageUrls = product.images || [];
+
+  if (!imageUrls.includes(imageUrl)) {
     return response.status(400).json({
-      error: 'Image is required',
+      error: 'Image not found in this product',
     });
   }
 
-  await Product.update(
-    { path: request.file.filename },
-    { where: { id } }
-  );
+  // remove da lista
+  const updatedImages = imageUrls.filter(img => img !== imageUrl);
+
+  // remove do supabase
+  await deleteMultipleImages([imageUrl]);
+
+  // salva no banco
+  await product.update({
+    images: updatedImages,
+  });
 
   return response.json({
-    message: 'Image updated successfully',
+    message: 'Image deleted successfully',
+    images: updatedImages,
   });
 }
 
 
-  
-  async index(request, response) {
-    const products = await Product.findAll({
-      include: [ {  
-        model: Category,
-        as : 'category',
-        attributes: ['id', 'name', 'path' ]
-        }
-      ]
+  async update(request, response) {
+    const { id } = request.params;
+
+    const product = await Product.findByPk(id);
+
+    if (!product) {
+      return response.status(400).json({
+        error: 'Make sure your product ID is correct',
+      });
+    }
+
+    const user = await User.findByPk(request.userId);
+
+    if (!user || !user.admin) {
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
+    let imageUrls = product.images || [];
+ 
+
+if (request.files && request.files.length > 0) {
+
+  if (imageUrls.length + request.files.length > 5) {
+    return response.status(400).json({
+      error: 'Maximum of 5 images per product',
+    });
+  }
+
+  const newImages = await uploadMultipleImages(request.files);
+  imageUrls = [...imageUrls, ...newImages];
+}
+    await product.update({
+      ...request.body,
+      images: imageUrls,
     });
 
-  const productsWithUrl = products.map(product => {
-    const productJson = product.toJSON();
-
-    if (productJson.path) {
-      productJson.url = `http://localhost:3001/product-file/${productJson.path}`;
-    }
-    
-    if (productJson.category) {
-      productJson.category.url = `http://localhost:3001/category-file/${productJson.category.path}`;
-    }
-
-    return {
-      ...productJson,
-      currencyValue: (productJson.price / 100).toFixed(2)  
-    };
-  });
-    return response.status(200).json(productsWithUrl);
+    return response.json(product);
   }
+
+
+  async index(request, response) {
+    const products = await Product.findAll({
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['id', 'name'],
+        },
+      ],
+    });
+
+    const formattedProducts = products.map(product => {
+      const productJson = product.toJSON();
+
+      return {
+        ...productJson,
+        currencyValue: (productJson.price / 100).toFixed(2),
+      };
+    });
+
+    return response.status(200).json(formattedProducts);
+  }
+
 }
 
 export default new ProductController();

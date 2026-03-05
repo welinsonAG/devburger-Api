@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'url';
+/*import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import multer from 'multer';
 
@@ -17,5 +17,32 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
+export default upload;*/
+
+import multer from 'multer';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const storage = multer.memoryStorage();
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
+
+fileFilter: (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+  if (!allowedTypes.includes(file.mimetype)) {
+    return cb(new Error('Only JPEG, PNG and WEBP images are allowed'));
+  }
+  cb(null, true);
+};
 
 export default upload;

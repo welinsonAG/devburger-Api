@@ -17,16 +17,15 @@ const routes = new Router();
 routes.post('/users', UserController.store);
 routes.post('/sessions', SessionController.store);
 
-routes.get('/categories', (req, res) => CategoryController.index(req, res));
+routes.get('/categories',  CategoryController.index);
 routes.get('/products', ProductController.index);
 
 routes.use(authMiddleware);
-routes.post('/products', upload.single('file'), ProductController.store);
+routes.post('/products', upload.array('images', 5), ProductController.store);
+routes.put('/products/:id', upload.array('images', 5), ProductController.update);
 
-routes.patch('/products/image/:id',upload.single('file'),ProductController.updateImage,);
-routes.put('/products/:id', upload.single('file'), ProductController.update);
-
-
+routes.delete('/products/:id', ProductController.delete);
+routes.delete('/products/:id/image', ProductController.deleteImage);
 
 routes.post('/categories', upload.single('file'), CategoryController.store);
 
