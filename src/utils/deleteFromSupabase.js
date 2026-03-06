@@ -1,6 +1,6 @@
 import supabase from '../config/supabase.js';
 
-export async function deleteImageSupabase(imageUrls) {
+export async function deleteMultipleImages(imageUrls) {
 
   const fileNames = imageUrls.map((url) => {
     const parts = url.split('/');

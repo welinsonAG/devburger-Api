@@ -3,7 +3,7 @@ import Product from '../models/Product.js';
 import Category from '../models/Category.js';
 import User from '../models/User.js';
 import { uploadMultipleImages } from '../../utils/uploadToSupabase.js';
-import { deleteMultipleImages } from '../../utils/deleteFromSupabase.js';
+import {deleteMultipleImages} from '../../utils/deleteFromSupabase.js';
 class ProductController {
 
   async store(request, response) {
@@ -73,6 +73,7 @@ async deleteImage(request, response) {
     });
   }
 
+
   // remove da lista
   const updatedImages = imageUrls.filter(img => img !== imageUrl);
 
@@ -90,8 +91,42 @@ async deleteImage(request, response) {
   });
 }
 
+async delete(request, response) {
+  const { id } = request.params;
+
+  const product = await Product.findByPk(id);
+
+  if (!product) {
+    return response.status(400).json({
+      error: 'Make sure your product ID is correct',
+    });
+  }
+
+  const user = await User.findByPk(request.userId);
+
+  if (!user || !user.admin) {
+    return response.status(401).json({ error: 'Unauthorized' });
+  }
+
+  await product.destroy();
+
+  return response.json({ message: 'Product deleted successfully' });
+}
+
 
   async update(request, response) {
+    const schema = Yup.object({
+      name: Yup.string(),
+      price: Yup.number(),
+      category_id: Yup.number(),
+      offer: Yup.boolean(),
+    });
+
+    try {
+      schema.validateSync(request.body, { abortEarly: false });
+    } catch (err) {
+      return response.status(400).json({ error: err.errors });
+    }
     const { id } = request.params;
 
     const product = await Product.findByPk(id);
@@ -127,7 +162,7 @@ if (request.files && request.files.length > 0) {
       images: imageUrls,
     });
 
-    return response.json(product);
+    return response.json(await Product.findByPk(id));
   }
 
 
