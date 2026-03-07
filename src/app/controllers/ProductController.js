@@ -35,7 +35,7 @@ class ProductController {
 
  let imageUrls = [];
 
- if (request.files && request.files.length > 0) {
+ if (request.files?.length) {
   imageUrls = await uploadMultipleImages(request.files);
 }
     const product = await Product.create({
@@ -108,6 +108,12 @@ async delete(request, response) {
     return response.status(401).json({ error: 'Unauthorized' });
   }
 
+  const imageUrls = product.images || [];
+
+  if (imageUrls.length > 0) {
+    await deleteMultipleImages(imageUrls);
+  }
+
   await product.destroy();
 
   return response.json({ message: 'Product deleted successfully' });
@@ -162,7 +168,15 @@ if (request.files && request.files.length > 0) {
       images: imageUrls,
     });
 
-    return response.json(await Product.findByPk(id));
+    return response.json(await Product.findByPk(id,{
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          attributes: ['id', 'name'],
+        },
+      ],
+    }));
   }
 
 

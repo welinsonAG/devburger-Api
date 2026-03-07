@@ -25,7 +25,7 @@ export async function uploadMultipleImages(files) {
   const fileName = `${uuidv4()}-${file.originalname}`;
 
   const { error } = await supabase.storage
-    .from('devburger')
+    .from('products')
     .upload(fileName, file.buffer, {
       contentType: file.mimetype,
     });
@@ -34,10 +34,11 @@ export async function uploadMultipleImages(files) {
     throw new Error(error.message);
   }
 
-  const { data } = supabase.storage.from('devburger').getPublicUrl(fileName);
+  const { data } = supabase.storage.from('products').getPublicUrl(fileName);
 
   return data.publicUrl;
 });
+
 
 return Promise.all(uploads);
 }

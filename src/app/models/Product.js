@@ -8,7 +8,8 @@ class Product extends Model {
         price: Sequelize.INTEGER,
         images: {
           type: Sequelize.JSONB,
-          allowNull: true,
+          allowNull: false,
+          defaultValue: [],
         },
 
         offer: Sequelize.BOOLEAN,
