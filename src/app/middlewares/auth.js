@@ -3,6 +3,7 @@ import authConfig from '../../config/auth.js';
 
 function authMiddleware(request, response, next) {
 
+  console.log("AUTH HEADER:", request.headers.authorization);
 const authToken = request.headers.authorization;
   
   if (!authToken) {
