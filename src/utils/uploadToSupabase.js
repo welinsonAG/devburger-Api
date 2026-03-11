@@ -28,12 +28,13 @@ export async function uploadMultipleImages(files) {
       throw new Error('File size too large');
     }
 
-    const fileName = `${uuidv4()}-${file.originalname}`;
+    const fileName = `${uuidv4()}.${mime.split('/')[1]}`;
 
     const { error } = await supabase.storage
       .from('products')
       .upload(fileName, file.buffer, {
-        contentType: mime
+        contentType: mime ,
+        cacheControl: '3600',
       });
 
     if (error) throw error;

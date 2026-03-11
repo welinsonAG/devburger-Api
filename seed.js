@@ -1,6 +1,9 @@
 import axios from 'axios';
 import FormData from 'form-data';
 
+import fs from 'fs';
+import path from 'path';
+
 const api = axios.create({
   baseURL: 'http://localhost:3001',
 });
@@ -69,13 +72,17 @@ async function seed() {
           continue;
         }
 
+       const imagePath = path.resolve("./src/assets/cheeseburger.jpg");
+
         const form = new FormData();
         form.append('name', prod.name);
         form.append('price', prod.price);
         form.append('category_id', category.id);
+        form.append('images', fs.createReadStream(imagePath));
 
         await api.post('/products', form, {
-          headers: form.getHeaders(),
+          headers:{ ...form.getHeaders(),
+            Authorization: `Bearer ${token}`},
         });
 
         console.log(`✅ Produto criado: ${prod.name}`);

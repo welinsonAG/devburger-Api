@@ -35,9 +35,11 @@ class ProductController {
 
  let imageUrls = [];
 
- if (request.files?.length) {
+ if (request.files && request.files.length > 0) {
   imageUrls = await uploadMultipleImages(request.files);
 }
+
+
     const product = await Product.create({
       ...request.body,
       images: imageUrls,
@@ -149,10 +151,10 @@ async delete(request, response) {
       return response.status(401).json({ error: 'Unauthorized' });
     }
 
-    let imageUrls = product.images || [];
+    let imageUrls = Array.isArray(product.images) ? product.images : [];
  
 
-if (request.files && request.files.length > 0) {
+if (request.files?.length ) {
 
   if (imageUrls.length + request.files.length > 5) {
     return response.status(400).json({
@@ -182,6 +184,7 @@ if (request.files && request.files.length > 0) {
 
   async index(request, response) {
     const products = await Product.findAll({
+      order: [['id', 'DESC']],
       include: [
         {
           model: Category,
@@ -196,6 +199,8 @@ if (request.files && request.files.length > 0) {
 
       return {
         ...productJson,
+        images: Array.isArray(productJson.images) ? productJson.images : [],
+        
         currencyValue: (productJson.price / 100).toFixed(2),
       };
     });
