@@ -14,6 +14,7 @@ class ProductController {
       offer: Yup.boolean(),
     });
 
+    
     try {
       schema.validateSync(request.body, { abortEarly: false });
     } catch (err) {
@@ -33,16 +34,17 @@ class ProductController {
   });
 }
 
- let imageUrls = [];
-
- if (request.files && request.files.length > 0) {
-  imageUrls = await uploadMultipleImages(request.files);
+if(!request.files || request.files.length === 0) {
+  return response.status(400).json({
+    error: 'A imagem é obrigatória',
+  });
 }
 
+    const imageUrls = await uploadMultipleImages(request.files);
 
     const product = await Product.create({
       ...request.body,
-      images: imageUrls,
+      images: imageUrls
     });
 
     return response.status(201).json(product);
