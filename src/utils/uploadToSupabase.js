@@ -5,14 +5,6 @@ import { validateImage } from "./validateImage.js";
 
 export async function uploadMultipleImages(files) {
 
-  if (!files || files.length === 0) {
-    throw new Error("No files uploaded");
-  }
-
-  if (files.length > 5) {
-    throw new Error("Maximum 5 images allowed");
-  }
-
   const uploads = files.map(async (file) => {
 
     await validateImage(file.buffer);
@@ -25,7 +17,7 @@ export async function uploadMultipleImages(files) {
     const mediumName = `${id}-medium.webp`;
     const fullName = `${id}-full.webp`;
 
-    const results = await Promise.all([
+    await Promise.all([
       supabase.storage.from("products").upload(thumbName, thumb, {
         contentType: "image/webp",
         cacheControl: "31536000"
@@ -41,10 +33,6 @@ export async function uploadMultipleImages(files) {
         cacheControl: "31536000"
       })
     ]);
-
-    results.forEach(r => {
-      if (r.error) throw r.error;
-    });
 
     return {
       thumb: supabase.storage.from("products").getPublicUrl(thumbName).data.publicUrl,

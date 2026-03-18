@@ -20,11 +20,17 @@ const categories = [
 ];
 
 const products = [
-  { name: 'Cheeseburger', price: 20, category: 'Hambúrguer' },
-  { name: 'X-Bacon', price: 25, category: 'Hambúrguer' },
-  { name: 'Coca-Cola', price: 7, category: 'Bebidas' },
-  { name: 'Sorvete', price: 10, category: 'Sobremesas' },
+  {
+    name: 'Cheeseburger',
+    price: 20,
+    category: 'Hambúrguer',
+    image: 'cheeseburger.jpg',
+  },
+  { name: 'X-Bacon', price: 25, category: 'Hambúrguer', image: 'xbacon.jpg' },
+  { name: 'Coca-Cola', price: 7, category: 'Bebidas', image: 'coca.png' },
+  { name: 'Sorvete', price: 10, category: 'Sobremesas', image: 'sorvete.png' },
 ];
+
 
 async function seed() {
   try {
@@ -41,6 +47,18 @@ async function seed() {
     // Criar categorias
     for (const cat of categories) {
       try {
+
+        const existingCategory = await api.get('/categories');
+        const alreadyExists = existingCategory.data.find(
+          (c) => c.name === cat.name
+        )
+        
+        if (alreadyExists) {
+          console.log(`⚠️ Categoria ja cadastrada: ${cat.name}`);
+          continue;
+        }
+          
+        
         const form = new FormData();
         form.append('name', cat.name);
 
@@ -52,7 +70,7 @@ async function seed() {
       } catch (err) {
         console.log(
           `❌ Erro categoria ${cat.name}:`,
-          JSON.stringify(err.response?.data || err.message, null, 2)
+          JSON.stringify(err.response?.data || err.message, null, 2),
         );
       }
     }
@@ -64,7 +82,7 @@ async function seed() {
     for (const prod of products) {
       try {
         const category = allCategories.data.find(
-          (c) => c.name === prod.category
+          (c) => c.name === prod.category,
         );
 
         if (!category) {
@@ -72,24 +90,27 @@ async function seed() {
           continue;
         }
 
-       const imagePath = path.resolve("./src/assets/cheeseburger.jpg");
+        const imagePath = path.resolve(`./src/assets/${prod.image}`);
 
         const form = new FormData();
         form.append('name', prod.name);
         form.append('price', prod.price);
         form.append('category_id', category.id);
-        form.append('images', fs.createReadStream(imagePath));
+        form.append(
+          'images',
+          fs.createReadStream(imagePath),
+          path.basename(imagePath),
+        );
 
         await api.post('/products', form, {
-          headers:{ ...form.getHeaders(),
-            Authorization: `Bearer ${token}`},
+          headers: form.getHeaders(),
         });
 
         console.log(`✅ Produto criado: ${prod.name}`);
       } catch (err) {
         console.log(
           `❌ Erro produto ${prod.name}:`,
-          JSON.stringify(err.response?.data || err.message, null, 2)
+          JSON.stringify(err.response?.data || err.message, null, 2),
         );
       }
     }
@@ -98,7 +119,7 @@ async function seed() {
   } catch (err) {
     console.log(
       '❌ Erro geral:',
-      JSON.stringify(err.response?.data || err.message, null, 2)
+      JSON.stringify(err.response?.data || err.message, null, 2),
     );
   }
 }

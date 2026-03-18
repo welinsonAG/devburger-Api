@@ -1,6 +1,6 @@
 import sharp from "sharp";
 
-export async function generateImageSizes(imageBuffer) {
+export async function generateImageSizes(buffer) {
     
     const thumb = await sharp(buffer)
     .rotate()

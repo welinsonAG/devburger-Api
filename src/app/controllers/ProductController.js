@@ -13,7 +13,7 @@ class ProductController {
       category_id: Yup.number().required(),
       offer: Yup.boolean(),
     });
-
+console.log(request.files);
     
     try {
       schema.validateSync(request.body, { abortEarly: false });
@@ -124,65 +124,79 @@ async delete(request, response) {
 }
 
 
-  async update(request, response) {
-    const schema = Yup.object({
-      name: Yup.string(),
-      price: Yup.number(),
-      category_id: Yup.number(),
-      offer: Yup.boolean(),
+async update(request, response) {
+
+  const schema = Yup.object({
+    name: Yup.string(),
+    price: Yup.number(),
+    category_id: Yup.number(),
+    offer: Yup.boolean(),
+  });
+
+  try {
+    schema.validateSync(request.body, { abortEarly: false });
+  } catch (err) {
+    return response.status(400).json({ error: err.errors });
+  }
+
+  const { id } = request.params;
+
+  const product = await Product.findByPk(id);
+
+  if (!product) {
+    return response.status(400).json({
+      error: 'Make sure your product ID is correct',
     });
+  }
 
+  const user = await User.findByPk(request.userId);
+
+  if (!user || !user.admin) {
+    return response.status(401).json({ error: 'Unauthorized' });
+  }
+
+  let imageUrls = [];
+
+  if (Array.isArray(product.images)) {
+    imageUrls = product.images;
+  } else if (typeof product.images === "string") {
     try {
-      schema.validateSync(request.body, { abortEarly: false });
-    } catch (err) {
-      return response.status(400).json({ error: err.errors });
+      imageUrls = JSON.parse(product.images);
+    } catch {
+      imageUrls = [];
     }
-    const { id } = request.params;
+  }
 
-    const product = await Product.findByPk(id);
+  if (request.files?.length) {
 
-    if (!product) {
+    if (imageUrls.length + request.files.length > 5) {
       return response.status(400).json({
-        error: 'Make sure your product ID is correct',
+        error: 'Maximum of 5 images per product',
       });
     }
 
-    const user = await User.findByPk(request.userId);
+    const newImages = await uploadMultipleImages(request.files);
 
-    if (!user || !user.admin) {
-      return response.status(401).json({ error: 'Unauthorized' });
-    }
-
-    let imageUrls = Array.isArray(product.images) ? product.images : [];
- 
-
-if (request.files?.length ) {
-
-  if (imageUrls.length + request.files.length > 5) {
-    return response.status(400).json({
-      error: 'Maximum of 5 images per product',
-    });
+    imageUrls = [...imageUrls, ...newImages];
   }
 
-  const newImages = await uploadMultipleImages(request.files);
-  imageUrls = [...imageUrls, ...newImages];
-}
-    await product.update({
-      ...request.body,
-      images: imageUrls,
-    });
+  await product.update({
+    ...request.body,
+    images: imageUrls,
+  });
 
-    return response.json(await Product.findByPk(id,{
+  return response.json(
+    await Product.findByPk(id, {
       include: [
         {
           model: Category,
-          as: 'category',
-          attributes: ['id', 'name'],
+          as: "category",
+          attributes: ["id", "name"],
         },
       ],
-    }));
-  }
-
+    })
+  );
+}
 
   async index(request, response) {
     const products = await Product.findAll({

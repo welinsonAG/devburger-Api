@@ -20,21 +20,30 @@ const upload = multer({ storage });
 
 export default upload;*/
 
-import multer from 'multer';
+import multer from "multer";
 
-const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+const allowedTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/webp"
+];
 
 const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
+
   limits: {
-    fileSize: 25 * 1024 * 1024, // 25MB
+    fileSize: 25 * 1024 * 1024,
   },
+
   fileFilter: (req, file, cb) => {
     if (!allowedTypes.includes(file.mimetype)) {
-      return cb(new Error('Only JPEG, PNG and WEBP images are allowed'));
+      return cb(
+        new Error("Only JPG, JPEG, PNG and WEBP images are allowed")
+      );
     }
+
     cb(null, true);
   },
 });
