@@ -27,9 +27,9 @@ routes.put('/products/:id', upload.array('images', 5), ProductController.update)
 routes.delete('/products/:id', ProductController.delete);
 routes.delete('/products/image/:id', ProductController.deleteImage);
 
-routes.post('/categories', upload.single('file'), CategoryController.store);
+routes.post('/categories', upload.single('image'), CategoryController.store);
 
-routes.put('/categories/:id', upload.single('file'), CategoryController.update);
+routes.put('/categories/:id', upload.single('image'), CategoryController.update);
 
 routes.post('/orders', OrderController.store);
 routes.get('/orders', OrderController.index);

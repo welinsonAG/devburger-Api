@@ -25,7 +25,8 @@ import multer from "multer";
 const allowedTypes = [
   "image/jpeg",
   "image/png",
-  "image/webp"
+  "image/webp",
+  "image/jpg",
 ];
 
 const storage = multer.memoryStorage();

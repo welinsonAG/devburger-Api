@@ -13,7 +13,7 @@ class ProductController {
       category_id: Yup.number().required(),
       offer: Yup.boolean(),
     });
-console.log(request.files);
+
     
     try {
       schema.validateSync(request.body, { abortEarly: false });
@@ -215,6 +215,7 @@ async update(request, response) {
 
       return {
         ...productJson,
+        image: productJson.images?.[0] || null,
         images: Array.isArray(productJson.images) ? productJson.images : [],
         
         currencyValue: (productJson.price / 100).toFixed(2),

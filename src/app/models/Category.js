@@ -1,16 +1,18 @@
-import Sequelize, { Model } from 'sequelize';
+import  { Model, DataTypes } from 'sequelize';
 
 class Category extends Model {
   static init(sequelize) {
     super.init(
       {
-        name: Sequelize.STRING,
-        path: Sequelize.STRING,
+        name: DataTypes.STRING,
+        path: DataTypes.TEXT,
         url: {
-          type: Sequelize.VIRTUAL,
+          type: DataTypes.VIRTUAL,
           get() {
-            if (!this.path) return null;
-            return `${process.env.APP_URL}/category-file/${this.path}`;
+           if (this.path) {
+              
+            return this.path || null;
+           }
           },
         },
       },
