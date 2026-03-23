@@ -7,6 +7,8 @@ import {deleteMultipleImages} from '../../utils/deleteFromSupabase.js';
 class ProductController {
 
   async store(request, response) {
+
+
     const schema = Yup.object({
       name: Yup.string().required(),
       price: Yup.number().required(),
@@ -41,10 +43,15 @@ if(!request.files || request.files.length === 0) {
 }
 
     const imageUrls = await uploadMultipleImages(request.files);
+console.log('FILES:', request.files);
+console.log('IMAGE URLS:', imageUrls);
 
+const formattdImages = imageUrls.map(img  => img.full 
+  
+);
     const product = await Product.create({
       ...request.body,
-      images: imageUrls
+       images:formattdImages 
     });
 
     return response.status(201).json(product);
@@ -176,8 +183,10 @@ async update(request, response) {
     }
 
     const newImages = await uploadMultipleImages(request.files);
+  
+    const formattedNewImages = newImages.map(img => img.full);
 
-    imageUrls = [...imageUrls, ...newImages];
+    imageUrls = [...imageUrls, ...formattedNewImages];
   }
 
   await product.update({

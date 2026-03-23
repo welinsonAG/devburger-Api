@@ -11,7 +11,7 @@ const models = [User, Product, Category, Order];
 
 class Database {
   constructor() {
-    this.init();
+    this.connection = null;
    
   }
 

@@ -1,18 +1,21 @@
 import sharp from 'sharp';
 
 export async function validateImage(buffer) {
-   
-    const metadata = await sharp(buffer).metadata();
-    const MAX_WIDTH = 5000;
-    const MAX_HEIGHT = 5000;
+  const image = sharp(buffer);
 
-    if (!metadata.width || !metadata.height) {
-        throw new Error('Invalid image');
-    }
-    
-  if (metadata.width > MAX_WIDTH || metadata.height > MAX_HEIGHT) {
-    throw new Error('Image size is too large');
+  const metadata = await image.metadata();
+
+  if (!metadata.width || !metadata.height) {
+    throw new Error('Invalid image');
   }
 
-  return true;
+  // redimensiona automaticamente
+  const resized = await image
+    .resize(1000, 1000, {
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
+    .toBuffer();
+
+  return resized;
 }
