@@ -46,9 +46,9 @@ if(!request.files || request.files.length === 0) {
 console.log('FILES:', request.files);
 console.log('IMAGE URLS:', imageUrls);
 
-const formattdImages = imageUrls.map(img  => img.full 
+const formattdImages = imageUrls
   
-);
+
     const product = await Product.create({
       ...request.body,
        images:formattdImages 
@@ -224,7 +224,7 @@ async update(request, response) {
 
       return {
         ...productJson,
-        image: productJson.images?.[0] || null,
+        image: productJson.images?.[0]?.full || null,
         images: Array.isArray(productJson.images) ? productJson.images : [],
         
         currencyValue: (productJson.price / 100).toFixed(2),

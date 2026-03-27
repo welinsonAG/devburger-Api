@@ -50,7 +50,10 @@ class OrderController {
         name: product.name,
         category: product.category.name,
         price: product.price,
-        url: product.url,
+        url: product.image?.full ||
+        product.images?.[0]?.full ||
+        product.images?.[0]?.medium ||
+        product.images?.[0]?.thumb || null,
         quantity: products[productIndex].quantity,
       };
       return newProduct;
@@ -71,8 +74,20 @@ class OrderController {
   }
 
   async index(request, response) {
-    const orders = await Order.findAll();
-
+    const orders = await Order.findAll({
+      include: [
+      {
+        model: product,
+        as: 'products',
+      },
+      {
+        model: User,
+        as: 'user',
+        attributes: ['id', 'name', 'email'],
+      },
+    ],
+    });
+      
     return response.json(orders);
   }
   async update(request, response) {
@@ -96,7 +111,7 @@ class OrderController {
     const { status } = request.body;
 
     try {
-      await Order.updateOne({ _id: id }, { status });
+      await Order.update( { status }, { where: { id } });
       } catch (err) {
          return response.status(400).json({ error: err.message });
      
