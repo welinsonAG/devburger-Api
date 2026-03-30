@@ -77,7 +77,7 @@ class OrderController {
     const orders = await Order.findAll({
       include: [
       {
-        model: product,
+        model: Product,
         as: 'products',
       },
       {
