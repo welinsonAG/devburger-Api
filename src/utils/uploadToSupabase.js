@@ -3,46 +3,49 @@ import supabase from "../config/supabase.js";
 import { generateImageSizes } from "./generateImageSizes.js";
 import { validateImage } from "./validateImage.js";
 
-
 export async function uploadMultipleImages(files) {
-
   const uploads = files.map(async (file) => {
 
-   const processedBuffer = await validateImage(file.buffer);
+    // valida e processa imagem
+    const processedBuffer = await validateImage(file.buffer);
 
     const { thumb, medium, full } = await generateImageSizes(processedBuffer);
 
     const id = uuidv4();
 
-    const thumbName = `thumb-${id}.webp`;
-    const mediumName = `medium-${id}.webp`;
-    const fullName = `full-${id}.webp`;
+    const thumbPath = `thumb/thumb-${id}.webp`;
+    const mediumPath = `medium/medium-${id}.webp`;
+    const fullPath = `full/full-${id}.webp`;
 
-   const thumbPath = `thumb/${thumbName}`;
-const mediumPath = `medium/${mediumName}`;
-const fullPath = `full/${fullName}`;
+    console.log('📦 Salvando imagens:', { thumbPath, mediumPath, fullPath });
 
+    // função segura de upload
+    const upload = async (path, fileBuffer) => {
+      const { error } = await supabase.storage
+        .from("products")
+        .upload(path, fileBuffer, {
+          contentType: "image/webp",
+          cacheControl: "31536000",
+        });
+
+      if (error) {
+        console.log("❌ ERRO SUPABASE:", error);
+        throw new Error(error.message);
+      }
+    };
+
+    // faz upload das 3 versões
     await Promise.all([
-      supabase.storage.from("products").upload(thumbPath, thumb, {
-        contentType: "image/webp",
-        cacheControl: "31536000"
-      }),
-
-      supabase.storage.from("products").upload(mediumPath, medium, {
-        contentType: "image/webp",
-        cacheControl: "31536000"
-      }),
-
-      supabase.storage.from("products").upload(fullPath, full, {
-        contentType: "image/webp",
-        cacheControl: "31536000"
-      })
+      upload(thumbPath, thumb),
+      upload(mediumPath, medium),
+      upload(fullPath, full),
     ]);
 
+    // retorna URLs públicas
     return {
       thumb: supabase.storage.from("products").getPublicUrl(thumbPath).data.publicUrl,
       medium: supabase.storage.from("products").getPublicUrl(mediumPath).data.publicUrl,
-      full: supabase.storage.from("products").getPublicUrl(fullPath).data.publicUrl
+      full: supabase.storage.from("products").getPublicUrl(fullPath).data.publicUrl,
     };
   });
 

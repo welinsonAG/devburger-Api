@@ -8,21 +8,25 @@ class Category extends Model {
         path: DataTypes.TEXT,
         url: {
           type: DataTypes.VIRTUAL,
-          get() {
-           if (this.path) {
-              
-            return this.path || null;
-           }
-          },
-        },
+        get images_url() {
+    if (!this.images) return [];
+
+    return this.images.map(
+      (image) =>
+        `https://gishberyzmwbclyxgqrp.supabase.co/storage/v1/object/public/products/${image}`
+    );
+  }
+}
       },
       {
         sequelize,
         tableName: 'categories',
-      },
+      }
     );
+
     return this;
   }
 }
+
 
 export default Category;

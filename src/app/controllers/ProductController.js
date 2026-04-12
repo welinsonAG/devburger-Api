@@ -3,24 +3,107 @@ import Product from '../models/Product.js';
 import Category from '../models/Category.js';
 import User from '../models/User.js';
 import { uploadMultipleImages } from '../../utils/uploadToSupabase.js';
-import {deleteMultipleImages} from '../../utils/deleteFromSupabase.js';
+import { deleteMultipleImages } from '../../utils/deleteFromSupabase.js';
+
+
+function sanitizeImages(images) {
+  try {
+    if (typeof images === 'string') {
+      images = JSON.parse(images);
+    }
+
+    if (!Array.isArray(images)) return [];
+
+    return images.map((img) => {
+      if (typeof img === 'string') {
+        return {
+          full: img,
+          medium: img,
+          thumb: img,
+        };
+      }
+
+      if (typeof img === 'object' && img !== null) {
+        return {
+          full: img.full || img.url || '',
+          medium: img.medium || img.full || '',
+          thumb: img.thumb || img.full || '',
+        };
+      }
+
+      return null;
+    }).filter(Boolean);
+
+  } catch {
+    return [];
+  }
+}
+
+
 class ProductController {
+async store(request, response) {
+  const schema = Yup.object({
+    name: Yup.string().required(),
+    price: Yup.number().required(),
+    category_id: Yup.number().required(),
+    offer: Yup.boolean(),
+  });
 
-  async store(request, response) {
+  try {
+    schema.validateSync(request.body, { abortEarly: false });
 
+    const user = await User.findByPk(request.userId);
 
-    const schema = Yup.object({
-      name: Yup.string().required(),
-      price: Yup.number().required(),
-      category_id: Yup.number().required(),
-      offer: Yup.boolean(),
+    if (!user || !user.admin) {
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
+    console.log('BODY:', request.body);
+    console.log('FILES:', request.files);
+
+    if (!request.files || request.files.length === 0) {
+      return response.status(400).json({
+        error: 'A imagem é obrigatória',
+      });
+    }
+
+    if (request.files.length > 5) {
+      return response.status(400).json({
+        error: 'Maximum of 5 images per product',
+      });
+    }
+
+    const imageUrls = await uploadMultipleImages(request.files);
+
+    console.log('IMAGE URLS:', imageUrls);
+
+    const formattedImages = sanitizeImages(imageUrls);
+
+    const product = await Product.create({
+      ...request.body,
+      images: formattedImages,
     });
 
-    
-    try {
-      schema.validateSync(request.body, { abortEarly: false });
-    } catch (err) {
-      return response.status(400).json({ error: err.errors });
+    return response.status(201).json(product);
+
+  } catch (error) {
+    console.log('❌ ERRO REAL:', error);
+    return response.status(500).json({
+      error: error.message || 'Internal server error',
+    });
+  }
+}
+
+  async deleteImage(request, response) {
+    const { id } = request.params;
+    const { imageUrl } = request.body;
+
+    const product = await Product.findByPk(id);
+
+    if (!product) {
+      return response.status(400).json({
+        error: 'Make sure your product ID is correct',
+      });
     }
 
     const user = await User.findByPk(request.userId);
@@ -29,183 +112,117 @@ class ProductController {
       return response.status(401).json({ error: 'Unauthorized' });
     }
 
-   
-    if (request.files && request.files.length > 5) {
-  return response.status(400).json({
-    error: 'Maximum of 5 images per product',
-  });
-}
+    let imageUrls = sanitizeImages(product.images);
 
-if(!request.files || request.files.length === 0) {
-  return response.status(400).json({
-    error: 'A imagem é obrigatória',
-  });
-}
-
-    const imageUrls = await uploadMultipleImages(request.files);
-console.log('FILES:', request.files);
-console.log('IMAGE URLS:', imageUrls);
-
-const formattdImages = imageUrls
-  
-
-    const product = await Product.create({
-      ...request.body,
-       images:formattdImages 
+    const updatedImages = imageUrls.filter((img) => {
+      if (typeof img === 'string') return img !== imageUrl;
+      return img.full !== imageUrl;
     });
 
-    return response.status(201).json(product);
-  }
+    // remove do supabase
+    await deleteMultipleImages([imageUrl]);
 
+    // salva no banco
+    await product.update({
+      images: updatedImages,
+    });
 
-async deleteImage(request, response) {
-  const { id } = request.params;
-  const { imageUrl } = request.body;
-
-  const product = await Product.findByPk(id);
-
-  if (!product) {
-    return response.status(400).json({
-      error: 'Make sure your product ID is correct',
+    return response.json({
+      message: 'Image deleted successfully',
+      images: updatedImages,
     });
   }
 
-  const user = await User.findByPk(request.userId);
+  async delete(request, response) {
+    const { id } = request.params;
 
-  if (!user || !user.admin) {
-    return response.status(401).json({ error: 'Unauthorized' });
-  }
+    const product = await Product.findByPk(id);
 
-  let imageUrls = product.images || [];
-
-  if (!imageUrls.includes(imageUrl)) {
-    return response.status(400).json({
-      error: 'Image not found in this product',
-    });
-  }
-
-
-  // remove da lista
-  const updatedImages = imageUrls.filter(img => img !== imageUrl);
-
-  // remove do supabase
-  await deleteMultipleImages([imageUrl]);
-
-  // salva no banco
-  await product.update({
-    images: updatedImages,
-  });
-
-  return response.json({
-    message: 'Image deleted successfully',
-    images: updatedImages,
-  });
-}
-
-async delete(request, response) {
-  const { id } = request.params;
-
-  const product = await Product.findByPk(id);
-
-  if (!product) {
-    return response.status(400).json({
-      error: 'Make sure your product ID is correct',
-    });
-  }
-
-  const user = await User.findByPk(request.userId);
-
-  if (!user || !user.admin) {
-    return response.status(401).json({ error: 'Unauthorized' });
-  }
-
-  const imageUrls = product.images || [];
-
-  if (imageUrls.length > 0) {
-    await deleteMultipleImages(imageUrls);
-  }
-
-  await product.destroy();
-
-  return response.json({ message: 'Product deleted successfully' });
-}
-
-
-async update(request, response) {
-
-  const schema = Yup.object({
-    name: Yup.string(),
-    price: Yup.number(),
-    category_id: Yup.number(),
-    offer: Yup.boolean(),
-  });
-
-  try {
-    schema.validateSync(request.body, { abortEarly: false });
-  } catch (err) {
-    return response.status(400).json({ error: err.errors });
-  }
-
-  const { id } = request.params;
-
-  const product = await Product.findByPk(id);
-
-  if (!product) {
-    return response.status(400).json({
-      error: 'Make sure your product ID is correct',
-    });
-  }
-
-  const user = await User.findByPk(request.userId);
-
-  if (!user || !user.admin) {
-    return response.status(401).json({ error: 'Unauthorized' });
-  }
-
-  let imageUrls = [];
-
-  if (Array.isArray(product.images)) {
-    imageUrls = product.images;
-  } else if (typeof product.images === "string") {
-    try {
-      imageUrls = JSON.parse(product.images);
-    } catch {
-      imageUrls = [];
-    }
-  }
-
-  if (request.files?.length) {
-
-    if (imageUrls.length + request.files.length > 5) {
+    if (!product) {
       return response.status(400).json({
-        error: 'Maximum of 5 images per product',
+        error: 'Make sure your product ID is correct',
       });
     }
 
-    const newImages = await uploadMultipleImages(request.files);
-  
-    const formattedNewImages = newImages.map(img => img.full);
+    const user = await User.findByPk(request.userId);
 
-    imageUrls = [...imageUrls, ...formattedNewImages];
+    if (!user || !user.admin) {
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const imageUrls = product.images || [];
+
+    if (imageUrls.length > 0) {
+      await deleteMultipleImages(imageUrls);
+    }
+
+    await product.destroy();
+
+    return response.json({ message: 'Product deleted successfully' });
   }
 
-  await product.update({
-    ...request.body,
-    images: imageUrls,
-  });
+  async update(request, response) {
+    const schema = Yup.object({
+      name: Yup.string(),
+      price: Yup.number(),
+      category_id: Yup.number(),
+      offer: Yup.boolean(),
+    });
 
-  return response.json(
-    await Product.findByPk(id, {
-      include: [
-        {
-          model: Category,
-          as: "category",
-          attributes: ["id", "name"],
-        },
-      ],
-    })
-  );
-}
+    try {
+      schema.validateSync(request.body, { abortEarly: false });
+    } catch (err) {
+      return response.status(400).json({ error: err.errors });
+    }
+
+    const { id } = request.params;
+
+    const product = await Product.findByPk(id);
+
+    if (!product) {
+      return response.status(400).json({
+        error: 'Make sure your product ID is correct',
+      });
+    }
+
+    const user = await User.findByPk(request.userId);
+
+    if (!user || !user.admin) {
+      return response.status(401).json({ error: 'Unauthorized' });
+    }
+
+    let imageUrls = sanitizeImages(product.images);
+
+
+    if (request.files?.length) {
+      if (imageUrls.length + request.files.length > 5) {
+        return response.status(400).json({
+          error: 'Maximum of 5 images per product',
+        });
+      }
+
+      const newImages = await uploadMultipleImages(request.files);
+
+      imageUrls = sanitizeImages([...imageUrls, ...newImages]);
+    }
+
+    await product.update({
+      ...request.body,
+      images: imageUrls,
+    });
+
+    return response.json(
+      await Product.findByPk(id, {
+        include: [
+          {
+            model: Category,
+            as: 'category',
+            attributes: ['id', 'name'],
+          },
+        ],
+      }),
+    );
+  }
 
   async index(request, response) {
     const products = await Product.findAll({
@@ -220,20 +237,25 @@ async update(request, response) {
     });
 
     const formattedProducts = products.map(product => {
-      const productJson = product.toJSON();
+  const productJson = product.toJSON();
 
-      return {
-        ...productJson,
-        image: productJson.images?.[0]?.full || null,
-        images: Array.isArray(productJson.images) ? productJson.images : [],
-        
-        currencyValue: (productJson.price / 100).toFixed(2),
-      };
-    });
+  let images = [];
 
-    return response.status(200).json(formattedProducts);
+ images = sanitizeImages(productJson.images);
+
+  return {
+    ...productJson,
+    images,
+    image: images?.[0]?.full || null,
+    currencyValue: (productJson.price / 100).toFixed(2),
+  };
+});
+
+    return response.json(formattedProducts);
   }
-
 }
 
 export default new ProductController();
+
+  
+

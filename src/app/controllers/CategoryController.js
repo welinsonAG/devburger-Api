@@ -3,22 +3,39 @@ import Category from '../models/Category.js';
 import User from '../models/User.js';
 import { uploadMultipleImages } from '../../utils/uploadToSupabase.js';
 class CategoryController {
-  async index(req, res) {
-    try {
-      const categories = await Category.findAll({
-        order: [['id', 'ASC']],
-      });
+async index(req, res) {
+  try {
+    const categories = await Category.findAll({
+      order: [['id', 'ASC']],
+    });
 
-    
+    const formattedCategories = categories.map(category => {
+      const categoryJson = category.dataValues || category;
 
-      return res.status(200).json(categories);
-    } catch (error) {
-      return res.status(500).json({ error: 'Failed to load categories' });
+      let imageUrl = '/default-category.png';
 
+      if (categoryJson.path && typeof categoryJson.path === 'string') {
+        imageUrl = categoryJson.path.startsWith('http')
+          ? categoryJson.path
+          : `https://gishberyzmwbclyxgqrp.supabase.co/storage/v1/object/public/categories/${categoryJson.path}`;
+      }
 
-    }
+      return {
+        ...categoryJson,
+        path: imageUrl,
+      };
+    });
+
+    return res.status(200).json(formattedCategories);
+
+  } catch (error) {
+    console.error('🔥 ERRO REAL:', error);
+    return res.status(500).json({
+      error: 'Failed to load categories',
+      message: error.message,
+    });
   }
-
+}
 async store(request, response) {
   console.log('BODY:', request.body);
   const schema = Yup.object({

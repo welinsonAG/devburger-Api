@@ -1,4 +1,4 @@
-import Sequelize, { Model } from 'sequelize';
+import Sequelize, { DataTypes, Model } from 'sequelize';
 
 
 class Product extends Model {
@@ -16,7 +16,7 @@ class Product extends Model {
         },
 
         images: {
-          type: Sequelize.JSONB,
+          type: DataTypes.JSONB,
           allowNull: false,
           validate: {
             notEmpty: true,
