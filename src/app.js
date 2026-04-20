@@ -20,10 +20,16 @@ constructor() {
     process.env.APP_URL
   ].filter(Boolean);
 
-  this.app.use(cors({
-    origin: allowedOrigins,
+this.app.use(
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'https://devburger-interface-six.vercel.app'
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
-  }));
+  })
+);
 
   this.middlewares();
   this.routes();
