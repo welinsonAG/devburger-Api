@@ -14,31 +14,33 @@ function sanitizeImages(images) {
 
     if (!Array.isArray(images)) return [];
 
-    return images.map((img) => {
-      if (typeof img === 'string') {
-        return {
-          full: img,
-          medium: img,
-          thumb: img,
-        };
-      }
+    return images
+      .map((img) => {
+        if (typeof img === 'string') {
+          return {
+            full: img || null,
+            medium: img || null,
+            thumb: img || null,
+          };
+        }
 
-      if (typeof img === 'object' && img !== null) {
-        return {
-          full: img.full || img.url || '',
-          medium: img.medium || img.full || '',
-          thumb: img.thumb || img.full || '',
-        };
-      }
+        if (typeof img === 'object' && img !== null) {
+          const full = img.full || img.url || null;
 
-      return null;
-    }).filter(Boolean);
+          return {
+            full,
+            medium: img.medium || full,
+            thumb: img.thumb || full,
+          };
+        }
 
+        return null;
+      })
+      .filter((img) => img && img.full); // 🔥 REMOVE imagens inválidas
   } catch {
     return [];
   }
 }
-
 
 class ProductController {
 async store(request, response) {
@@ -246,7 +248,7 @@ async store(request, response) {
   return {
     ...productJson,
     images,
-    image: images?.[0]?.full || null,
+   image: images.find(img => img.full)?.full || null,
     currencyValue: (productJson.price / 100).toFixed(2),
   };
 });

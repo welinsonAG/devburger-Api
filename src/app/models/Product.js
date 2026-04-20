@@ -51,9 +51,9 @@ class Product extends Model {
     if (!this.images) return [];
 
     return this.images.map(
-      (image) =>
-        `https://gishberyzmwbclyxgqrp.supabase.co/storage/v1/object/public/products/${image}`
-    );
+      (image) => image.full);
+        
+    
   }
 }
 export default Product;
