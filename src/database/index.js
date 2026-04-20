@@ -6,47 +6,40 @@ import User from '../app/models/User.js';
 import Product from '../app/models/Product.js';
 import Category from '../app/models/Category.js';
 
-
 const models = [User, Product, Category, Order];
 
 class Database {
   constructor() {
     this.connection = null;
-   
   }
 
   async init() {
+  console.log(process.env.DATABASE_URL);
     try {
       // Sequelize precisa dos parâmetros separados
-      this.connection = new Sequelize(
-        databaseConfig.database,
-        databaseConfig.username,
-        databaseConfig.password,
-        {
-          host: databaseConfig.host,
-          dialect: databaseConfig.dialect,
-          port: databaseConfig.port,
-          define: databaseConfig.define,
-          logging: false,
-        }
-      );
+      this.connection = new Sequelize(process.env.DATABASE_URL, {
+        dialect: 'postgres',
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false,
+          },
+        },
+      });
 
       await this.connection.authenticate();
       console.log('✅ Conexão com o banco SQL estabelecida');
 
-     
       models
         .map((model) => model.init(this.connection))
         .map(
-          (model) => model.associate && model.associate(this.connection.models)
+          (model) => model.associate && model.associate(this.connection.models),
         );
     } catch (error) {
-      console.error('❌ Erro ao conectar no banco SQL:', error.message);
+      console.error('❌ Erro ao conectar no banco SQL:', error);
       process.exit(1);
     }
   }
-
-  
 }
 
 export default new Database();
