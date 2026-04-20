@@ -1,4 +1,4 @@
-import  { Model, DataTypes } from 'sequelize';
+import { Model, DataTypes } from 'sequelize';
 
 class Category extends Model {
   static init(sequelize) {
@@ -8,25 +8,23 @@ class Category extends Model {
         path: DataTypes.TEXT,
         url: {
           type: DataTypes.VIRTUAL,
-        get images_url() {
-    if (!this.images) return [];
+          get() {
+            if (!this.path) return null;
 
-    return this.images.map(
-      (image) =>
-        `https://gishberyzmwbclyxgqrp.supabase.co/storage/v1/object/public/products/${image}`
-    );
-  }
-}
+            return `https://gishberyzmwbclyxgqrp.supabase.co/storage/v1/object/public/products/${this.path}`;
+          }
+        }
       },
       {
         sequelize,
         tableName: 'categories',
+        underscored: true,
+        timestamps: false // 👈 importante se não tiver no banco
       }
     );
 
     return this;
   }
 }
-
 
 export default Category;

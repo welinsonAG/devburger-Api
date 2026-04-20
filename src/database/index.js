@@ -14,7 +14,7 @@ class Database {
   }
 
   async init() {
-  console.log(process.env.DATABASE_URL);
+  
     try {
       // Sequelize precisa dos parâmetros separados
       this.connection = new Sequelize(process.env.DATABASE_URL, {

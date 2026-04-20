@@ -11,15 +11,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 class App {
-  constructor() {
-    this.app = express();
-    this.app.use  (cors({
-      origin: process.env.APP_URL,
-      credentials: true,
-    }));
-    this.middlewares();
-    this.routes();
-  }
+ 
+constructor() {
+  this.app = express();
+
+  const allowedOrigins = [
+    'http://localhost:5173',
+    process.env.APP_URL
+  ].filter(Boolean);
+
+  this.app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }));
+
+  this.middlewares();
+  this.routes();
+}
+   
+   
 
   middlewares() {
     

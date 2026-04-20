@@ -5,11 +5,14 @@ import fs from 'fs';
 import path from 'path';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3001',
+  baseURL: 
+  process.env.NODE_ENV === 'production'
+    ? 'https://devburger-api-5t5d.onrender.com'
+    : 'http://localhost:3001',
 });
 
 const user = {
-  email: 'welinsongg@gmail.com',
+  email: 'welinson@gmail.com',
   password: '123456', // ⚠️ deve ser exatamente igual ao campo usado no SessionController
 };
 
@@ -45,14 +48,15 @@ async function seed() {
     console.log('✅ Login realizado!');
 
     // Criar categorias
-    for (const cat of categories) {
-      try {
-
+  
         const existingCategory = await api.get('/categories');
-        const alreadyExists = existingCategory.data.find(
-          (c) => c.name === cat.name
-        )
+       
+        for(const cat of categories){
+            try {
+          const alreadyExists = existingCategory.data.find(
+            (c) => c.name === cat.name);
         
+
         if (alreadyExists) {
           console.log(`⚠️ Categoria ja cadastrada: ${cat.name}`);
           continue;
@@ -63,7 +67,10 @@ async function seed() {
         form.append('name', cat.name);
 
         await api.post('/categories', form, {
-          headers: form.getHeaders(),
+          headers:{  
+          ...form.getHeaders(),
+            Authorization: `Bearer ${token}`,
+          }
         });
 
         console.log(`✅ Categoria criada: ${cat.name}`);
@@ -90,7 +97,13 @@ async function seed() {
           continue;
         }
 
+     
         const imagePath = path.resolve(`./src/assets/${prod.image}`);
+
+           if (!fs.existsSync(imagePath)) {
+          console.log(`⚠️ Imagem não encontrada: ${imagePath}`);
+          continue;
+        }
 
         const form = new FormData();
         form.append('name', prod.name);
@@ -103,7 +116,10 @@ async function seed() {
         );
 
         await api.post('/products', form, {
-          headers: form.getHeaders(),
+          headers: {
+            ...form.getHeaders(),
+            Authorization: `Bearer ${token}`,
+          }
         });
 
         console.log(`✅ Produto criado: ${prod.name}`);
