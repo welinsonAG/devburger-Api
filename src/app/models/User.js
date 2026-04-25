@@ -14,16 +14,16 @@ class User extends Model {
         email: Sequelize.STRING,
         password: Sequelize.VIRTUAL,
         password_hash: Sequelize.STRING,
-        admin:{
-type: Sequelize.BOOLEAN,
-allowNull: false,
-defaultValue: false,
-        } 
+        admin: {
+          type: Sequelize.BOOLEAN,
+          allowNull: false,
+          defaultValue: false,
+        },
       },
       {
         sequelize,
         tableName: 'users',
-         timestamps: true,
+        timestamps: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
       },
@@ -34,10 +34,14 @@ defaultValue: false,
         user.password_hash = await bcrypt.hash(user.password, 10);
       }
     });
+
     return this;
   }
 
-    async checkPassword(password) {
+  // 👇 AQUI É ONDE ENTRA
+  async checkPassword(password) {
+    if (!this.password_hash) return false;
+
     return bcrypt.compare(password, this.password_hash);
   }
 }

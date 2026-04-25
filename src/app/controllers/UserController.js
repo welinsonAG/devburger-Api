@@ -7,9 +7,7 @@
  */
 
 import { v4 } from 'uuid';
-
 import * as Yup from 'yup';
-
 import User from '../models/User.js';
 
 class UserController {
@@ -20,47 +18,47 @@ class UserController {
       name: Yup.string().required(),
       email: Yup.string().email().required(),
       password: Yup.string().min(6).required(),
-      admin: Yup.boolean()
+      admin: Yup.boolean(),
     });
 
     try {
-      schema.validateSync(request.body, { abortEarly: false });
+      await schema.validate(request.body, { abortEarly: false });
     } catch (err) {
       return response.status(400).json({ error: err.errors });
     }
 
-    const { name, email, password, admin } = request.body;
+    const { name, email, password, admin = false } = request.body;
 
     const userExists = await User.findOne({
-      where: {
-        email,
-      },
+      where: { email },
     });
 
     if (userExists) {
       return response.status(409).json({ error: 'User already exists' });
     }
 
-   try{
-     const user = await User.create({
-      id: v4(),
-      name,
-      email,
-      password,
-      admin,
-   
-    });
+    try {
+      const user = await User.create({
+        id: v4(),
+        name,
+        email,
+        password, // 👈 (assumindo que seu model faz hash no beforeSave)
+        admin,
+      });
 
-    return response.status(201).json({
-      id: user.id,
-      name,
-      email,
-      admin,
-    });
+      return response.status(201).json({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        admin: user.admin,
+      });
     } catch (error) {
-  console.error('Erro ao criar usuário:', error);
-  return response.status(500).json({ error: error.message });
-}
+      console.error('Erro ao criar usuário:', error);
+
+      return response.status(500).json({
+        error: 'Internal server error',
+      });
+    }
   }
 }
 

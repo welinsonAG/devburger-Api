@@ -25,6 +25,11 @@ class Database {
             rejectUnauthorized: false,
           },
         },
+        define: {
+          timestamps: true,
+          underscored: true,
+          underscoredAll: true,
+        },
       });
 
       await this.connection.authenticate();

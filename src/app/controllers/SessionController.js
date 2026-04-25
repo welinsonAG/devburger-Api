@@ -30,6 +30,11 @@ class SessionController {
       },
     });
 
+    if (!user || !user.password_hash) {
+  return response.status(401).json({
+    error: 'Invalid credentials',
+  });
+}
     if (!user) {
       return  emailOrPasswordIncorrect ()
     }
