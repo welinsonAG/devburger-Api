@@ -15,25 +15,16 @@ class App {
 constructor() {
   this.app = express();
 
-  // 🔥 FORÇA CORS ANTES DE QUALQUER COISA
-  this.app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "https://devburger-interface-bgoa5g1bl-welinsonags-projects.vercel.app");
-    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-    if (req.method === "OPTIONS") {
-      return res.sendStatus(204);
-    }
-
-    next();
-  });
 
   // 🔥 CORS OFICIAL (backup)
   this.app.use(cors({
     origin: [
-      'https://devburger-interface-bgoa5g1bl-welinsonags-projects.vercel.app',
+      'https://devburger-interface-chi.vercel.app',
+       'https://devburger-interface-bgoa5g1bl-welinsonags-projects.vercel.app',
       'http://localhost:5173',
     ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   }));
 
