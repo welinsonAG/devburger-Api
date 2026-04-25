@@ -1,14 +1,6 @@
 import 'dotenv/config';
 import app from './app.js';
 import Database from './database/index.js';
-import cors from 'cors';
-
-app.use(cors({
-  origin: 'https://devburger-interface-chi.vercel.app',
- methods: ['GET', 'POST', 'PUT', 'DELETE'],
- allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-}));
 
 
 const PORT = process.env.PORT || 3001;

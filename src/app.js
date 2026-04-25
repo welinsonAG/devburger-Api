@@ -22,9 +22,11 @@ this.app.use(
     'https://devburger-interface-chi.vercel.app',
  ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH','OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   })
 );
+
 
   this.middlewares();
   this.routes();
