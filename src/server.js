@@ -4,8 +4,9 @@ import Database from './database/index.js';
 import cors from 'cors';
 
 app.use(cors({
-  origin: 'http://devburger-interface.vercel.app',
- 
+  origin: 'https://devburger-interface-chi.vercel.app',
+ methods: ['GET', 'POST', 'PUT', 'DELETE'],
+ allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
 

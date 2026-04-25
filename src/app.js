@@ -5,7 +5,7 @@ import routes from './routes.js';
 import cors from 'cors';
 
 
-import './database/index.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -15,29 +15,16 @@ class App {
 constructor() {
   this.app = express();
 
-  const allowedOrigins = [
-    'http://localhost:5173',
-    process.env.APP_URL
-  ].filter(Boolean);
 this.app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-
-      if (
-        origin.includes('localhost') ||
-        origin.includes('vercel.app')
-      ) {
-        return callback(null, true);
-      }
-
-      return callback(new Error('Not allowed by CORS'));
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+ origin:[
+    'http://localhost:5173',
+    'https://devburger-interface-chi.vercel.app',
+ ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH','OPTIONS'],
     credentials: true,
   })
 );
-
 
   this.middlewares();
   this.routes();
