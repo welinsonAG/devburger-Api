@@ -1,6 +1,14 @@
 import 'dotenv/config';
 import app from './app.js';
 import Database from './database/index.js';
+import cors from 'cors';
+
+app.use(cors({
+  origin: 'http://devburger-interface.vercel.app',
+ 
+  credentials: true,
+}));
+
 
 const PORT = process.env.PORT || 3001;
 

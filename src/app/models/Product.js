@@ -11,7 +11,7 @@ class Product extends Model {
         },
         
         price: {
-          type:Sequelize.INTEGER,
+          type:Sequelize.DECIMAL(10, 2),
           allowNull: false,
         },
 
@@ -47,13 +47,18 @@ class Product extends Model {
   });
    }
 
- get images_url() {
+ get imagesUrl() {
     if (!this.images) return [];
 
     return this.images.map(
-      (image) => image.full);
-        
-    
+      (image) => ({
+        thumb: image.thumb,
+        medium: image.medium,
+        large: image.large,
+      })
+    );
   }
-}
+      
+  }
+
 export default Product;

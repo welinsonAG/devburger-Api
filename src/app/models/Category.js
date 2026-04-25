@@ -9,9 +9,9 @@ class Category extends Model {
         url: {
           type: DataTypes.VIRTUAL,
           get() {
-            if (!this.path) return null;
+            
 
-            return `https://gishberyzmwbclyxgqrp.supabase.co/storage/v1/object/public/products/${this.path}`;
+            return this.path || null;
           }
         }
       },

@@ -4,7 +4,7 @@ class Order extends Model {
   static init(sequelize) {
     super.init(
       {
-        user: DataTypes.JSONB,
+        user_data: DataTypes.JSONB,
         products: DataTypes.JSONB,
         status: DataTypes.STRING,
       },
@@ -17,5 +17,6 @@ class Order extends Model {
     return this;
   }
 }
+
 
 export default Order;

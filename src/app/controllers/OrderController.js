@@ -60,7 +60,7 @@ class OrderController {
     });
 
     const order = {
-      user: {
+      user_data: {
         id: request.userId,
         name: request.userName,
       },
@@ -73,12 +73,19 @@ class OrderController {
     return response.status(201).json(createdOrder);
   }
 
-  async index(request, response) {
-    const orders = await Order.findAll();{
-     return response.json(orders);
-    };
-      
+async index(request, response) {
+  try {
+    const orders = await Order.findAll();
+
+    return response.json(orders);
+  } catch (error) {
+    console.error('ERRO AO BUSCAR PEDIDOS:', error);
+    return response.status(500).json({
+      error: 'Erro ao buscar pedidos',
+      details: error.message,
+    });
   }
+}
   async update(request, response) {
     const schema = Yup.object({
       status: Yup.string().required(),
