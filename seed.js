@@ -12,7 +12,7 @@ const api = axios.create({
 });
 
 const user = {
-  email: 'welinson@gmail.com',
+  email:  'admin@gmail.com',
   password: '123456', // ⚠️ deve ser exatamente igual ao campo usado no SessionController
 };
 
@@ -133,10 +133,9 @@ async function seed() {
 
     console.log('\n🎉 Seed finalizado com sucesso!');
   } catch (err) {
-    console.log(
-      '❌ Erro geral:',
-      JSON.stringify(err.response?.data || err.message, null, 2),
-    );
+   console.log('❌ Erro geral completo:');
+console.log(err.response?.data);
+console.log(err.message);
   }
 }
 

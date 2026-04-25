@@ -74,21 +74,10 @@ class OrderController {
   }
 
   async index(request, response) {
-    const orders = await Order.findAll({
-      include: [
-      {
-        model: Product,
-        as: 'products',
-      },
-      {
-        model: User,
-        as: 'user',
-        attributes: ['id', 'name', 'email'],
-      },
-    ],
-    });
+    const orders = await Order.findAll();{
+     return response.json(orders);
+    };
       
-    return response.json(orders);
   }
   async update(request, response) {
     const schema = Yup.object({
