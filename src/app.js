@@ -15,24 +15,33 @@ class App {
 constructor() {
   this.app = express();
 
-this.app.use(
-  cors({
- origin:[
-  
-    'https://devburger-interface-chi.vercel.app',
+  // 🔥 1. CORS PRIMEIRO
+  this.app.use(cors({
+    origin: [
+      'https://devburger-interface-chi.vercel.app',
       'http://localhost:5173',
- ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH','OPTIONS'],
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-  })
-);
+  }));
 
+  // 🔥 2. FORÇA PRE-FLIGHT (ISSSO É O QUE ESTÁ FALTANDO)
+  this.app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "https://devburger-interface-chi.vercel.app");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS");
+
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(200);
+    }
+
+    next();
+  });
 
   this.middlewares();
   this.routes();
 }
-   
    
 
   middlewares() {
